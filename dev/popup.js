@@ -16,28 +16,68 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function getPeopleData() {
 	console.log(`getPeoplePictures - START`);
-	let data = document.querySelectorAll('.ms-Image-image');
-	let _imgData;
-	let _fullName;
-	let result = [];
-	
-	data.forEach(elem => {
-		//getAttribute('src') blob:https://whoplus.microsoft.com/b078c6d5-23f7-4a8a-adc5-ff987a14b1a7
-		//getAttribute('alt') Profile picture of Satya Nadella
+	let _person = {
+		'imgData': '',
+		'fullName': '',
+		'alias': ''
+	}
+	let result = {
+		'selected': [],
+		'above': [],
+		'below': []
+	};
+	let _data;
+
+	/*
+		Get the currently selected person
+	*/
+	let selectedPerson = document.querySelectorAll('div[class^="emailAlias"]');
+	console.log(selectedPerson);
+
+
+	/*
+		Get the upstream management chain
+	*/
+	let aboveSelectedPerson = document.querySelectorAll('div[aria-label*="Manager"]')[0];
+	aboveSelectedPerson = aboveSelectedPerson.querySelectorAll('a[href*="/Org/"]');
+	console.log(aboveSelectedPerson);
+
+	aboveSelectedPerson.forEach(elem => {
+		_person.alias = elem.getAttribute('href');
+		_data = elem.querySelector('.ms-Image-image');
 		_imgData = elem.getAttribute('src');
 		_fullName = elem.getAttribute('alt');
 		console.log(`Full name: ${_fullName} with blob ${_imgData}`);
-		if(_imgData && _fullName) {
-			result.push({
-				'imgData': _imgData,
-				'fullName': _fullName.replace('Profile picture of ', '')
-			});
-		}
+		_person.imgData = _imgData;
+		_person.fullName = _fullName;
+
+		result.above.push(_person);
 	});
-	
-	chrome.runtime.sendMessage(JSON.stringify(result));
+
+
+	/*
+		Get the currently selected person's reports
+	*/
+	let belowSelectedPerson = document.querySelectorAll('div[class*="personDirectsView"]')[0];
+	belowSelectedPerson = belowSelectedPerson.querySelectorAll('a[href*="/Org/"]');
+	console.log(belowSelectedPerson);
+
+	belowSelectedPerson.forEach(elem => {
+		_person.alias = elem.getAttribute('href');
+		_data = elem.querySelector('.ms-Image-image');
+		_imgData = elem.getAttribute('src');
+		_fullName = elem.getAttribute('alt');
+		console.log(`Full name: ${_fullName} with blob ${_imgData}`);
+		_person.imgData = _imgData;
+		_person.fullName = _fullName;
+
+		result.below.push(_person);
+	});
+
 	console.log(`getPeoplePictures - END`);
+	chrome.runtime.sendMessage(JSON.stringify(result));
 }
+
 
 chrome.runtime.onMessage.addListener(function(message) {
 	console.log(`POPUP Got Message`);
@@ -45,9 +85,13 @@ chrome.runtime.onMessage.addListener(function(message) {
 	populatePeoplePicturesList(message);
 });
 
-function populatePeoplePicturesList(list) {
+
+function populatePeoplePicturesList(message) {
 	console.log(`populatePeoplePicturesList - START`);
-	let people = JSON.parse(list);
+	let people = JSON.parse(message);
+	
+	//test
+	people = people.below;
 	console.log(people);
 
 	if(people.length) {
@@ -66,7 +110,7 @@ function populatePeoplePicturesList(list) {
 
 		people.forEach(person => {
 			// Add the picture as a row in the main content
-			bodyContent += makeOnePersonRow(person.imgData, person.fullName);
+			bodyContent += makeOnePersonRow(person.imgData, person.fullName, person.alias);
 		});
 
 		bodyContent += '<i style="grid-column: span 3;">End of people list</i>';	
@@ -82,14 +126,15 @@ function populatePeoplePicturesList(list) {
 	console.log(`populatePeoplePicturesList - END`);
 }
 
-function makeOnePersonRow(imgData, fullName) {
+function makeOnePersonRow(imgData, fullName, alias) {
 	// console.log(`\n makeOnePersonRow`);
 	// console.log(iconSVG);
 
 	let row = `
 		<div class="rowWrapper">
 			<img src="${imgData}" style="grid-column: 1; height:32px;"/>
-			<div style="grid-column: span 2;">${fullName}</div>
+			<div style="grid-column: 2; font-weight: bold;">${fullName}</div>
+			<div style="grid-column: 3;">(${alias})</div>
 		</div>
 	`;
 
