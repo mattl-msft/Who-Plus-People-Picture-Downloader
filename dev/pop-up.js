@@ -1,3 +1,5 @@
+import { getPeopleData } from './main-page.js';
+
 // What to do every time the popup is opened
 document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById('bodyContent').innerHTML = '<i style="grid-column: span 3;">Getting people pictures...</i>';
@@ -14,71 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 });
 
-function getPeopleData() {
-	console.log(`getPeoplePictures - START`);
-	let _person = {
-		'imgData': '',
-		'fullName': '',
-		'alias': ''
-	}
-	let result = {
-		'selected': [],
-		'above': [],
-		'below': []
-	};
-	let _data;
-
-	/*
-		Get the currently selected person
-	*/
-	let selectedPerson = document.querySelectorAll('div[class^="emailAlias"]');
-	console.log(selectedPerson);
-
-
-	/*
-		Get the upstream management chain
-	*/
-	let aboveSelectedPerson = document.querySelectorAll('div[aria-label*="Manager"]')[0];
-	aboveSelectedPerson = aboveSelectedPerson.querySelectorAll('a[href*="/Org/"]');
-	console.log(aboveSelectedPerson);
-
-	aboveSelectedPerson.forEach(elem => {
-		_person.alias = elem.getAttribute('href');
-		_data = elem.querySelector('.ms-Image-image');
-		_imgData = elem.getAttribute('src');
-		_fullName = elem.getAttribute('alt');
-		console.log(`Full name: ${_fullName} with blob ${_imgData}`);
-		_person.imgData = _imgData;
-		_person.fullName = _fullName;
-
-		result.above.push(_person);
-	});
-
-
-	/*
-		Get the currently selected person's reports
-	*/
-	let belowSelectedPerson = document.querySelectorAll('div[class*="personDirectsView"]')[0];
-	belowSelectedPerson = belowSelectedPerson.querySelectorAll('a[href*="/Org/"]');
-	console.log(belowSelectedPerson);
-
-	belowSelectedPerson.forEach(elem => {
-		_person.alias = elem.getAttribute('href');
-		_data = elem.querySelector('.ms-Image-image');
-		_imgData = elem.getAttribute('src');
-		_fullName = elem.getAttribute('alt');
-		console.log(`Full name: ${_fullName} with blob ${_imgData}`);
-		_person.imgData = _imgData;
-		_person.fullName = _fullName;
-
-		result.below.push(_person);
-	});
-
-	console.log(`getPeoplePictures - END`);
-	chrome.runtime.sendMessage(JSON.stringify(result));
-}
-
-
 chrome.runtime.onMessage.addListener(function(message) {
 	console.log(`POPUP Got Message`);
 	console.log(message);	
@@ -90,27 +27,29 @@ function populatePeoplePicturesList(message) {
 	console.log(`populatePeoplePicturesList - START`);
 	let people = JSON.parse(message);
 	
+	let bodyContent = `
+		<div class="headerRow">
+			<span id="topTitle">Found ${people.below.length} people</span>
+			<button id="openInfo"><span>
+				<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="14px"
+					height="14px" viewBox="0 0 14 14" style="enable-background:new 0 0 14 14;" xml:space="preserve">
+				<path d="M7,0C3.1,0,0,3.1,0,7c0,3.9,3.1,7,7,7s7-3.1,7-7C14,3.1,10.9,0,7,0z M8,12H6V6h2V12z M7,4.5c-0.8,0-1.3-0.6-1.3-1.3
+					S6.4,2,7,2c0.6,0,1.3,0.6,1.3,1.3S7.8,4.5,7,4.5z"/>
+				</svg>
+			</span></button>
+		</div>
+	`;
+
+	bodyContent += makeOnePersonRow(people.selected);
+
 	//test
 	people = people.below;
 	console.log(people);
 
 	if(people.length) {
-		let bodyContent = `
-			<div class="headerRow">
-				<span id="topTitle">Found ${people.length} people</span>
-				<button id="openInfo"><span>
-					<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="14px"
-						height="14px" viewBox="0 0 14 14" style="enable-background:new 0 0 14 14;" xml:space="preserve">
-					<path d="M7,0C3.1,0,0,3.1,0,7c0,3.9,3.1,7,7,7s7-3.1,7-7C14,3.1,10.9,0,7,0z M8,12H6V6h2V12z M7,4.5c-0.8,0-1.3-0.6-1.3-1.3
-						S6.4,2,7,2c0.6,0,1.3,0.6,1.3,1.3S7.8,4.5,7,4.5z"/>
-					</svg>
-				</span></button>
-			</div>
-		`;
-
 		people.forEach(person => {
 			// Add the picture as a row in the main content
-			bodyContent += makeOnePersonRow(person.imgData, person.fullName, person.alias);
+			bodyContent += makeOnePersonRow(person);
 		});
 
 		bodyContent += '<i style="grid-column: span 3;">End of people list</i>';	
@@ -126,15 +65,14 @@ function populatePeoplePicturesList(message) {
 	console.log(`populatePeoplePicturesList - END`);
 }
 
-function makeOnePersonRow(imgData, fullName, alias) {
+function makeOnePersonRow(person) {
 	// console.log(`\n makeOnePersonRow`);
 	// console.log(iconSVG);
 
 	let row = `
 		<div class="rowWrapper">
-			<img src="${imgData}" style="grid-column: 1; height:32px;"/>
-			<div style="grid-column: 2; font-weight: bold;">${fullName}</div>
-			<div style="grid-column: 3;">(${alias})</div>
+			<img src="${person.imgData}" style="grid-column: 1; height:32px;"/>
+			<div style="grid-column: span 2;"><b>${person.fullName}</b> (${person.alias})</div>
 		</div>
 	`;
 
