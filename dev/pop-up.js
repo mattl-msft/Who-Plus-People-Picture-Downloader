@@ -38,6 +38,7 @@ chrome.runtime.onMessage.addListener(function(message) {
 	redraw();
 });
 
+
 function redraw() {
 	console.log(`redraw - START`);
 
@@ -68,7 +69,7 @@ function redrawPeoplePicturesList() {
 			listContent += makeOnePersonRow(person);
 		});
 
-		listContent += '<span><i>End of people list</i></span><br>';
+		listContent += '<span><i>End of people list</i></span><br><br>';
 		document.getElementById('listContent').innerHTML = listContent;
 
 	} else {
@@ -78,17 +79,25 @@ function redrawPeoplePicturesList() {
 	console.log(`redrawPeoplePicturesList - END`);
 }
 
+
 function makeOnePersonRow(person) {
 	// console.log(`\n makeOnePersonRow - START`);
-	let row = `
-		<div class="rowWrapper">
-			<img src="${person.imgData}" alt="Photo picture of ${person.fullName}" />
+	let row = `<div class="rowWrapper">`;
+
+	if(person.imgData){
+			row += `<img class="photo" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
+	} else {
+			row += `<div class="initials" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
+	}
+
+	row += `
 			<div><b>${person.fullName}</b> (${person.alias})</div>
 		</div>
 	`;
 
 	return row;
 }
+
 
 function redrawControls() {
 	let controlsContent = `<h2>Options</h2>`;
@@ -119,6 +128,7 @@ function redrawControls() {
 	document.getElementById('includeManagementChainInput').onchange = updateSettings;
 }
 
+
 function updateSettings() {
 	let maskSetting = document.getElementById('maskInput').value;
 	let sizeSetting = parseInt(document.getElementById('sizeInput').value);
@@ -133,6 +143,7 @@ function updateSettings() {
 
 	redrawPeoplePicturesList();
 }
+
 
 function redrawInfo() {
 	
@@ -165,6 +176,7 @@ function redrawInfo() {
 	document.getElementById('openInfo').onclick = () => document.getElementById('infoDialog').style.display = 'block';
 	document.getElementById('closeInfo').onclick = () => document.getElementById('infoDialog').style.display = 'none';
 }
+
 
 function downloadFile(name = 'icon', fContent = '') {
 	let file = new Blob([fContent], {type: 'svg'});

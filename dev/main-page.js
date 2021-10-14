@@ -27,46 +27,71 @@ function getPeopleData() {
 	/*
 		Get the upstream management chain cards
 	*/
-	let aboveSelectedPerson = document.querySelectorAll('div[aria-label*="Manager"]')[0];
-	aboveSelectedPerson = aboveSelectedPerson.querySelectorAll('a[href*="/Org/"]');
-	console.log(aboveSelectedPerson);
+	let aboveSelectedPerson = document.querySelectorAll('div[aria-label*="Manager"]');
 
-	aboveSelectedPerson.forEach(elem => {
-		result.above.push(getDataFromPeopleNode(elem));
-	});
+	// everyone should have upstream management chain, except Satya
+	if(aboveSelectedPerson.length){
+		aboveSelectedPerson = aboveSelectedPerson[0];
+		aboveSelectedPerson = aboveSelectedPerson.querySelectorAll('a[href*="/Org/"]');
+		console.log(aboveSelectedPerson);
+		
+		aboveSelectedPerson.forEach(elem => {
+			result.above.push(getDataFromPeopleNode(elem));
+		});
+	}
 
 
 	/*
 		Get the currently selected person's team cards
 	*/
-	let belowSelectedPerson = document.querySelectorAll('div[class*="personDirectsView"]')[0];
-	belowSelectedPerson = belowSelectedPerson.querySelectorAll('a[href*="/Org/"]');
-	console.log(belowSelectedPerson);
+	let belowSelectedPerson = document.querySelectorAll('div[class*="personDirectsView"]');
 
-	belowSelectedPerson.forEach(elem => {
-		result.below.push(getDataFromPeopleNode(elem));
-	});
+	// All ICs will be missing this section
+	if(belowSelectedPerson.length){
+		belowSelectedPerson = belowSelectedPerson[0];
+		belowSelectedPerson = belowSelectedPerson.querySelectorAll('a[href*="/Org/"]');
+		console.log(belowSelectedPerson);
+		
+		belowSelectedPerson.forEach(elem => {
+			result.below.push(getDataFromPeopleNode(elem));
+		});
+	}
 
 
 	// Given a single person's card, get name, alias, and picture data from it
 	function getDataFromPeopleNode(node){
-		let alias = node.getAttribute('href').split('/Org/')[1];
-		let data = node.querySelector('.ms-Image-image');
-		let imgData = data.getAttribute('src');
-		let fullName = data.getAttribute('alt').split('Profile picture of ')[1];
-	
-		console.log(`Full name: ${fullName} alias: ${alias} imgData: ${imgData}`);
-		
-		return {
-			'alias': alias,
-			'fullName': fullName,
-			'imgData': imgData
+		console.log(node);
+		let subNode;
+		let personData = {
+			'alias': '',
+			'fullName': ''
 		};
+
+		// get Full Name
+		subNode = node.querySelector('.ms-Persona-primaryText');
+		personData.fullName = subNode.firstElementChild.textContent;
+
+		// get Alias
+		personData.alias = node.getAttribute('href').split('/Org/')[1].toLowerCase();;
+
+		// get Photo or Initials
+		subNode = node.querySelector('.ms-Image-image');
+		if(subNode && subNode.getAttribute('src')){
+			// has photo
+			personData.imgData = subNode.getAttribute('src');
+		} else {
+			// only initials
+			subNode = node.querySelector('.ms-Persona-initials');
+			personData.initials = subNode.firstElementChild.textContent;
+			personData.bgColor = window.getComputedStyle(subNode).backgroundColor;
+		}
+
+	
+		console.log(`${personData.fullName} | ${personData.alias} | ${personData.imgData? personData.imgData : `${personData.initials} | ${personData.bgColor}`}`);
+		
+		return personData
 	}
 
 	console.log(`getPeoplePictures - END`);
 	chrome.runtime.sendMessage(JSON.stringify(result));
 }
-
-
-

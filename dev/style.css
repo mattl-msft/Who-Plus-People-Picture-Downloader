@@ -8,6 +8,8 @@
 
 	--pad: 20px;
 	--small-pad: 10px;
+
+	--row-size: 48px;
 }
 
 html, body {
@@ -127,9 +129,9 @@ select:hover {
 	padding-top: var(--pad);
 	display: grid;
 	grid-template-columns: 36px 200px 86px;
-	grid-template-rows: repeat(36px);
-	grid-column-gap: 20px;
-	grid-row-gap: 20px;
+	grid-template-rows: repeat(var(--row-size));
+	grid-column-gap: var(--pad);
+	grid-row-gap: var(--small-pad);
 }
 
 .rowWrapper {
@@ -141,9 +143,16 @@ select:hover {
 	grid-column: span 2;
 }
 
-.rowWrapper img {
+.rowWrapper .photo,
+.rowWrapper .initials {
 	grid-column: 1;
-	height:32px;
+	height: var(--row-size);
+	width: var(--row-size);
+	line-height: var(--row-size);
+	color: white;
+	text-align: center;
+	align-self: center;
+	font-weight: bold;
 }
 
 .headerRow {
