@@ -1,4 +1,5 @@
 import { getPeopleData } from './main-page.js';
+import photoResizerMasker from './photo-resizer-masker.js';
 
 let _settings = {
 	mask: 'circle',
@@ -50,31 +51,46 @@ function redraw() {
 }
 
 
+/*
+		Picture List
+*/
 function redrawPeoplePicturesList() {
 	console.log(`redrawPeoplePicturesList - START`);
 	
+	let total = 1 + peopleData.below.length;
+	if(_settings.includeManagementChain) total += peopleData.above.length;
+
 	let listContent = `
 	<span>
 		<h2>People Pictures</h2>
-		<i>found ${peopleData.below.length +1} people</i>
+		<i>found ${total} people</i>
 	</span>`;
 	
 	// listContent += `<span>${JSON.stringify(_settings)}</span>`;
-	
-	listContent += makeOnePersonRow(peopleData.selected);
 
+	// ABOVE
+	if(_settings.includeManagementChain){
+		if(peopleData.above.length) {
+			peopleData.above.forEach(person => {
+				// Add the picture as a row in the main content
+				listContent += makeOnePersonRow(person);
+			});
+		}
+	}
+	
+	// SELECTED
+	listContent += makeOnePersonRow(peopleData.selected, true);
+
+	// BELOW
 	if(peopleData.below.length) {
 		peopleData.below.forEach(person => {
 			// Add the picture as a row in the main content
 			listContent += makeOnePersonRow(person);
 		});
-
-		listContent += '<span><i>End of people list</i></span><br><br>';
-		document.getElementById('listContent').innerHTML = listContent;
-
-	} else {
-		document.getElementById('listContent').innerHTML = '<span><i>No photos found</i></span><br>';
 	}
+	
+	listContent += '<span><i>End of people list</i></span><br><br>';
+	document.getElementById('listContent').innerHTML = listContent;
 	
 	console.log(`redrawPeoplePicturesList - END`);
 }
@@ -84,8 +100,12 @@ function makeOnePersonRow(person) {
 	// console.log(`\n makeOnePersonRow - START`);
 	let row = `<div class="rowWrapper">`;
 
+	// Cache the image data for mask+size combinations
+	let dataKey = _settings.mask + _settings.size;
+
 	if(person.imgData){
-			row += `<img class="photo" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
+		if (!person[dataKey]) person[dataKey] = photoResizerMasker({'image': person.imgData, 'mask': _settings.mask, 'size': _settings.size, });
+		row += `<img class="photo" src="${person[dataKey].result}" alt="Photo picture of ${person.fullName}" />`;
 	} else {
 			row += `<div class="initials" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
 	}
@@ -99,8 +119,11 @@ function makeOnePersonRow(person) {
 }
 
 
+/*
+		Controls & Header
+*/
 function redrawControls() {
-	let controlsContent = `<h2>Options</h2>`;
+	let controlsContent = `<h2>Picture options</h2>`;
 
 	controlsContent += `
 		<label for="maskInput">Shape mask</label>
