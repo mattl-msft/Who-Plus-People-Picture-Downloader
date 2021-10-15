@@ -7,14 +7,18 @@ let _settings = {
 	includeManagementChain: false
 };
 
-let peopleData = {
+let _peopleData = {
 	selected: {},
 	above: [],
 	below: []
 };
 
-let cachedPeoplePhotos = {}
+let _cachedPeoplePhotos = {}
 
+
+/*
+		Starting the extension
+*/
 // What to do every time the popup is opened
 document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById('infoContent').innerHTML = '<span><i>Getting people pictures...</i></span>';
@@ -35,8 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
 chrome.runtime.onMessage.addListener(function(message) {
 	console.log(`POPUP.listener - got message`);
 	console.log(message);
-	peopleData = JSON.parse(message);
-	console.log(peopleData);
+	_peopleData = JSON.parse(message);
+	console.log(_peopleData);
 
 	redraw();
 });
@@ -59,8 +63,8 @@ function redraw() {
 function redrawPeoplePicturesList() {
 	console.log(`redrawPeoplePicturesList - START`);
 	
-	let total = 1 + peopleData.below.length;
-	if(_settings.includeManagementChain) total += peopleData.above.length;
+	let total = 1 + _peopleData.below.length;
+	if(_settings.includeManagementChain) total += _peopleData.above.length;
 
 	let listContent = `
 	<span>
@@ -72,8 +76,8 @@ function redrawPeoplePicturesList() {
 
 	// ABOVE
 	if(_settings.includeManagementChain) {
-		if(peopleData.above.length) {
-			peopleData.above.forEach(person => {
+		if(_peopleData.above.length) {
+			_peopleData.above.forEach(person => {
 				// Add the picture as a row in the main content
 				listContent += makeOnePersonRow(person);
 			});
@@ -82,11 +86,11 @@ function redrawPeoplePicturesList() {
 	}
 	
 	// SELECTED
-	listContent += makeOnePersonRow(peopleData.selected, true);
+	listContent += makeOnePersonRow(_peopleData.selected, true);
 
 	// BELOW
-	if(peopleData.below.length) {
-		peopleData.below.forEach(person => {
+	if(_peopleData.below.length) {
+		_peopleData.below.forEach(person => {
 			// Add the picture as a row in the main content
 			listContent += makeOnePersonRow(person);
 		});
@@ -113,16 +117,16 @@ function makeOnePersonRow(person) {
 		if(person.imgData) {
 			// row += `<img class="photo" src="${person[dataKey].result}" alt="Photo picture of ${person.fullName}" />`;
 			
-			if (cachedPeoplePhotos[dataKey] && cachedPeoplePhotos[dataKey][person.alias]) {
-				row += `<img class="photo" src="${cachedPeoplePhotos[dataKey][person.alias]}" alt="Photo picture of ${person.fullName}" />`;
+			if (_cachedPeoplePhotos[dataKey] && _cachedPeoplePhotos[dataKey][person.alias]) {
+				row += `<img class="photo" src="${_cachedPeoplePhotos[dataKey][person.alias]}" alt="Photo picture of ${person.fullName}" />`;
 			
 			} else {
-				if(!cachedPeoplePhotos[dataKey]) cachedPeoplePhotos[dataKey] = {};
+				if(!_cachedPeoplePhotos[dataKey]) _cachedPeoplePhotos[dataKey] = {};
 				row += `<img class="photo placeholder" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
 				
 				photoResizerMasker({'image': person.imgData, 'mask': _settings.mask, 'size': _settings.size, 'name': person.alias},
 					function(data) {
-						cachedPeoplePhotos[dataKey][person.alias] = data.result;
+						_cachedPeoplePhotos[dataKey][person.alias] = data.result;
 						let personToUpdate = document.getElementById(`alias-${person.alias}`);
 						personToUpdate.innerHTML = `<img class="photo" src="${data.result}" alt="Photo picture of ${person.fullName}" />`;
 					}
@@ -228,7 +232,8 @@ function redrawInfo() {
 				<span>
 					<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="14px"
 						height="14px" viewBox="0 0 14 14" style="enable-background:new 0 0 14 14;" xml:space="preserve">
-						<polygon points="6,0 8,0 8,12 13,7 14,8 7,14 0,8 1,7 6,12"/>
+						<rect x="1" y="12" width="12" height="2"/>
+						<polygon points="11.708 4.869 8 7.856 8 0 6 0 6 7.856 2.292 4.869 1 6.418 7 11.295 13 6.418 11.708 4.869"/>
 					</svg>&nbsp;Download&nbsp;people&nbsp;pictures&nbsp;
 				</span>
 			</button>
@@ -250,25 +255,50 @@ function redrawInfo() {
 
 	document.getElementById('openInfo').onclick = () => document.getElementById('infoDialog').style.display = 'block';
 	document.getElementById('closeInfo').onclick = () => document.getElementById('infoDialog').style.display = 'none';
+	document.getElementById('downloadButton').onclick = downloadAllPeoplePictures;
 }
 
 
-function downloadFile(name = 'icon', fContent = '') {
-	let file = new Blob([fContent], {type: 'svg'});
-	name += '.svg';
+/*
+		Download files
+*/
+function downloadAllPeoplePictures(){
+	let downloadList = [];
+	if(_settings.includeManagementChain) downloadList = downloadList.concat(_peopleData.above);
+	downloadList.push(_peopleData.selected);
+	downloadList = downloadList.concat(_peopleData.below);
 
-	if (window.navigator.msSaveOrOpenBlob) // IE10+
-		window.navigator.msSaveOrOpenBlob(file, name);
-	else { // Others
-		let a = document.createElement("a");
-		let url = URL.createObjectURL(file);
-		a.href = url;
-		a.download = name;
-		document.body.appendChild(a);
-		a.click();
-		setTimeout(function() {
-			document.body.removeChild(a);
-			window.URL.revokeObjectURL(url);  
-		}, 0); 
+	console.log(`downloadAllPeoplePictures - doing ${downloadList.length}`);
+	// downloadList.forEach((elem) => {
+		// 	if(_settings.mask !== 'none') {
+			// 		let dataKey = _settings.mask + _settings.size;
+			// 		downloadFile(elem.alias, _cachedPeoplePhotos[dataKey][elem.alias]);
+			// 	}
+			// });
+			
+	let index = 0;
+	let element;
+	function downloadOnePersonPicture() {
+		if(index < downloadList.length) {
+			element = downloadList[index];
+
+			if(_settings.mask !== 'none') {
+				let dataKey = _settings.mask + _settings.size;
+				downloadFile(element.alias, _cachedPeoplePhotos[dataKey][element.alias]);
+			}
+
+			index++;
+			window.setTimeout(downloadOnePersonPicture, 100);
+		}
 	}
+
+	downloadOnePersonPicture();
+}
+
+function downloadFile(alias = 'picture', imgData = ''){
+	console.log(`\t\t downloading ${alias}`);
+	var link = document.createElement('a');
+	link.download = `${alias}.png`
+	link.href = imgData;
+	link.click();
 }

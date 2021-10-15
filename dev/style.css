@@ -1,5 +1,5 @@
 :root {
-	--blue: hsla(210, 90%, 40%, 80%);
+	--blue: hsl(210, 100%, 40%);
 	--purple: hsl(298, 83%, 32%);
 	--orange: hsl(31, 100%, 50%);
 	--accent: var(--purple);
