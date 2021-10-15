@@ -36,7 +36,7 @@ i {
 }
 
 span {
-	grid-column: span 2;
+	grid-column: span 3;
 }
 
 input:focus,
@@ -111,11 +111,16 @@ select:hover {
 	height: 20px;
 }
 
+input[type="checkbox"]:hover {
+	cursor: pointer;
+}
+
 #downloadButton {
 	position: relative;
 	left: -10px;
 	width: max-content;
 }
+
 #downloadButton span {
 	font-size: 18px;
 	padding: 4px var(--small-pad);
@@ -138,13 +143,8 @@ select:hover {
 	display: contents;
 }
 
-.rowWrapper div {
-	align-self: center;
-	grid-column: span 2;
-}
-
-.rowWrapper .photo,
-.rowWrapper .initials {
+.thumbnail .photo,
+.thumbnail .initials {
 	grid-column: 1;
 	height: var(--row-size);
 	width: var(--row-size);
@@ -153,6 +153,20 @@ select:hover {
 	text-align: center;
 	align-self: center;
 	font-weight: bold;
+}
+
+.thumbnail .placeholder {
+	border-radius: 6px;
+	opacity: 0.20;
+}
+
+.rowWrapper .name {
+	align-self: center;
+	grid-column: 2 / 4;
+}
+
+.separator {
+	border-bottom: 1px dashed var(--purple);
 }
 
 .headerRow {

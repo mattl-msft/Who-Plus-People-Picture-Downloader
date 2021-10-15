@@ -3,7 +3,7 @@ import photoResizerMasker from './photo-resizer-masker.js';
 
 let _settings = {
 	mask: 'circle',
-	size: 800,
+	size: 200,
 	includeManagementChain: false
 };
 
@@ -12,6 +12,8 @@ let peopleData = {
 	above: [],
 	below: []
 };
+
+let cachedPeoplePhotos = {}
 
 // What to do every time the popup is opened
 document.addEventListener('DOMContentLoaded', function() {
@@ -63,19 +65,20 @@ function redrawPeoplePicturesList() {
 	let listContent = `
 	<span>
 		<h2>People Pictures</h2>
-		<i>found ${total} people</i>
+		<i id="statusMessage">found ${total} people</i>
 	</span>`;
 	
 	// listContent += `<span>${JSON.stringify(_settings)}</span>`;
 
 	// ABOVE
-	if(_settings.includeManagementChain){
+	if(_settings.includeManagementChain) {
 		if(peopleData.above.length) {
 			peopleData.above.forEach(person => {
 				// Add the picture as a row in the main content
 				listContent += makeOnePersonRow(person);
 			});
 		}
+		listContent += `<span class="separator"></span>`;
 	}
 	
 	// SELECTED
@@ -98,20 +101,51 @@ function redrawPeoplePicturesList() {
 
 function makeOnePersonRow(person) {
 	// console.log(`\n makeOnePersonRow - START`);
-	let row = `<div class="rowWrapper">`;
+	let row = `
+		<div class="rowWrapper">
+			<div class="thumbnail" id="alias-${person.alias}">
+	`;
 
-	// Cache the image data for mask+size combinations
-	let dataKey = _settings.mask + _settings.size;
+	if(_settings.mask !== 'none') {
+		// Cache the image data for mask+size combinations
+		let dataKey = _settings.mask + _settings.size;
 
-	if(person.imgData){
-		if (!person[dataKey]) person[dataKey] = photoResizerMasker({'image': person.imgData, 'mask': _settings.mask, 'size': _settings.size, });
-		row += `<img class="photo" src="${person[dataKey].result}" alt="Photo picture of ${person.fullName}" />`;
+		if(person.imgData) {
+			// row += `<img class="photo" src="${person[dataKey].result}" alt="Photo picture of ${person.fullName}" />`;
+			
+			if (cachedPeoplePhotos[dataKey] && cachedPeoplePhotos[dataKey][person.alias]) {
+				row += `<img class="photo" src="${cachedPeoplePhotos[dataKey][person.alias]}" alt="Photo picture of ${person.fullName}" />`;
+			
+			} else {
+				if(!cachedPeoplePhotos[dataKey]) cachedPeoplePhotos[dataKey] = {};
+				row += `<img class="photo placeholder" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
+				
+				photoResizerMasker({'image': person.imgData, 'mask': _settings.mask, 'size': _settings.size, 'name': person.alias},
+					function(data) {
+						cachedPeoplePhotos[dataKey][person.alias] = data.result;
+						let personToUpdate = document.getElementById(`alias-${person.alias}`);
+						personToUpdate.innerHTML = `<img class="photo" src="${data.result}" alt="Photo picture of ${person.fullName}" />`;
+					}
+				);
+			}
+				
+
+		} else {
+				row += `<div class="initials" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
+		}
+
 	} else {
+		// No masking or resizing
+		if(person.imgData) {
+			row += `<img class="photo" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
+		} else {
 			row += `<div class="initials" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
+		}
 	}
 
 	row += `
-			<div><b>${person.fullName}</b> (${person.alias})</div>
+			</div>
+			<div class="name"><b>${person.fullName}</b> (${person.alias})</div>
 		</div>
 	`;
 
@@ -125,6 +159,8 @@ function makeOnePersonRow(person) {
 function redrawControls() {
 	let controlsContent = `<h2>Picture options</h2>`;
 
+	// controlsContent += '<canvas id="testCanvas"></canvas><br>';
+
 	controlsContent += `
 		<label for="maskInput">Shape mask</label>
 		<select onChange="updateSettings();" id="maskInput">
@@ -134,14 +170,21 @@ function redrawControls() {
 		</select>
 	`;
 
-	controlsContent += `
-		<label>Resize (px)</label>
-		<input onChange="updateSettings();" type="number" id="sizeInput" value="${_settings.size}">
-	`;
+	if(_settings.mask !== 'none') {
+		controlsContent += `
+			<label>Resize (px)</label>
+			<input onChange="updateSettings();" type="number" id="sizeInput" value="${_settings.size}"/>
+		`;
+	} else {
+		controlsContent += `
+			<label>Size (px)</label>
+			<input type="text" id="sizeInput" disabled value=""/>
+		`;
+	}
 
 	controlsContent += `
 		<label for="includeManagementChainInput">Include management chain</label>
-		<input onChange="updateSettings();" type="checkbox" ${_settings.includeManagementChain? 'checked ' : ''}id="includeManagementChainInput">
+		<input onChange="updateSettings();" type="checkbox" ${_settings.includeManagementChain? 'checked ' : ''}id="includeManagementChainInput"/>
 	`;
 
 	document.getElementById('controlsContent').innerHTML = controlsContent;
@@ -163,6 +206,15 @@ function updateSettings() {
 		size: sizeSetting,
 		includeManagementChain: includeManagementChainSetting
 	};
+
+	let sizeElement = document.getElementById('sizeInput');
+	if(_settings.mask === 'none') {
+		sizeElement.setAttribute('disabled', 'disabled');
+		// sizeElement.value = '';
+	} else {
+		sizeElement.removeAttribute('disabled');
+		// sizeElement.value = _settings.size;
+	}
 
 	redrawPeoplePicturesList();
 }

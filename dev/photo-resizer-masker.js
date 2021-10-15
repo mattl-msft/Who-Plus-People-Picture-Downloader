@@ -13,8 +13,8 @@ export default function photoResizerMasker(options = {}, callback){
 	log(options);
 
 	// create working images
-	// let workingCanvas = document.getElementById('testCanvas');
 	let workingCanvas = document.createElement('canvas');
+	if(document.getElementById('testCanvas')) workingCanvas = document.getElementById('testCanvas');
 	let workingContext = workingCanvas.getContext('2d');
 	let srcImage = new Image();
 	srcImage.setAttribute('id', 'sourceImage');
@@ -29,6 +29,7 @@ export default function photoResizerMasker(options = {}, callback){
 	function processImage() {
 		// const resultImage = new Image();
 		let minDimension = Math.min(srcImage.width, srcImage.height);
+		if(srcImage.width !== srcImage.height) console.warn(`\t original dimensions - w:${srcImage.width} h:${srcImage.height}`);
 		
 		/*   Scaling   */
 		if(options.size){
@@ -40,6 +41,18 @@ export default function photoResizerMasker(options = {}, callback){
 		if(options.mask){
 			workingCanvas.width = minDimension * scale;
 			workingCanvas.height = minDimension * scale;
+			let x = 0;
+			let y = 0;
+
+			if(options.mask === 'circle' || options.mask === 'square'){
+				if(srcImage.width > srcImage.height) {
+					log(`\t width > height, updating to x:${(-1*scale*(srcImage.width/4))} y:000`);
+					x = (-1*scale*(srcImage.width/4));
+				} else if (srcImage.width < srcImage.height) {
+					log(`\t width < height, updating to x:000 y:${(-1*scale*(srcImage.height/4))}`);
+					y = (-1*scale*(srcImage.height/4))
+				}
+			}
 
 			if(options.mask === 'circle'){
 				// Circle
@@ -48,36 +61,14 @@ export default function photoResizerMasker(options = {}, callback){
 				workingContext.beginPath();
 				workingContext.arc(radius, radius, radius, 0, Math.PI * 2, false);
 				workingContext.clip();
-				if(srcImage.width > srcImage.height){
-					workingContext.drawImage(
-						srcImage, 
-						(-1*scale*(srcImage.width/4)), 0,
-						srcImage.width*scale, srcImage.height*scale
-					);
-				} else {
-					workingContext.drawImage(
-						srcImage, 
-						0, (-1*scale*(srcImage.height/4)),
-						srcImage.width*scale, srcImage.height*scale
-					);
-				}
+				workingContext.drawImage(srcImage, x, y, srcImage.width*scale, srcImage.height*scale);
 
-			} else if (options.mask === 'square'){
+			} else if (options.mask === 'square') {
 				// Square
 				log(`\n${options.name}\n\t>>>MASK - square`);
-				if(srcImage.width > srcImage.height){
-					workingContext.drawImage(
-						srcImage, 
-						(-1*scale*(srcImage.width/4)), 0,
-						srcImage.width*scale, srcImage.height*scale
-					);
-				} else {
-					workingContext.drawImage(
-						srcImage, 
-						0, (-1*scale*(srcImage.height/4)),
-						srcImage.width*scale, srcImage.height*scale
-					);
-				}
+				workingContext.drawImage(srcImage, x, y, srcImage.width*scale, srcImage.height*scale);
+
+			} else if (options.mask === 'none') {
 			} else {
 				console.warn(`Unhandled mask value: ${options.mask}`);
 			}
