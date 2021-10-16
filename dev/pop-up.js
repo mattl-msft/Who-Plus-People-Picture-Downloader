@@ -74,27 +74,7 @@ function redrawPeoplePicturesList() {
 	
 	// listContent += `<span>${JSON.stringify(_settings)}</span>`;
 
-	// ABOVE
-	if(_settings.includeManagementChain) {
-		if(_peopleData.above.length) {
-			_peopleData.above.forEach(person => {
-				// Add the picture as a row in the main content
-				listContent += makeOnePersonRow(person);
-			});
-		}
-		listContent += `<span class="separator"></span>`;
-	}
-	
-	// SELECTED
-	listContent += makeOnePersonRow(_peopleData.selected, true);
-
-	// BELOW
-	if(_peopleData.below.length) {
-		_peopleData.below.forEach(person => {
-			// Add the picture as a row in the main content
-			listContent += makeOnePersonRow(person);
-		});
-	}
+	iterateOverPeopleList(person => listContent += makeOnePersonRow(person));
 	
 	listContent += '<span><i>End of people list</i></span><br><br>';
 	document.getElementById('listContent').innerHTML = listContent;
@@ -103,57 +83,125 @@ function redrawPeoplePicturesList() {
 }
 
 
+function iterateOverPeopleList(fun) {
+	// ABOVE
+	if(_settings.includeManagementChain) {
+		if(_peopleData.above.length) {
+			_peopleData.above.forEach(person => {
+				fun(person);
+			});
+		}
+	}
+	
+	// SELECTED
+	fun(_peopleData.selected);
+
+	// BELOW
+	if(_peopleData.below.length) {
+		_peopleData.below.forEach(person => {
+			fun(person);
+		});
+	}
+}
+
+
 function makeOnePersonRow(person) {
-	// console.log(`\n makeOnePersonRow - START`);
-	let row = `
+	console.log(`\n makeOnePersonRow - START`);
+	console.log(`\t ${person.alias} - ${person.fullName}`);
+
+	let rowStart = `
 		<div class="rowWrapper">
 			<div class="thumbnail" id="alias-${person.alias}">
 	`;
 
-	if(_settings.mask !== 'none') {
-		// Cache the image data for mask+size combinations
-		let dataKey = _settings.mask + _settings.size;
-
-		if(person.imgData) {
-			// row += `<img class="photo" src="${person[dataKey].result}" alt="Photo picture of ${person.fullName}" />`;
-			
-			if (_cachedPeoplePhotos[dataKey] && _cachedPeoplePhotos[dataKey][person.alias]) {
-				row += `<img class="photo" src="${_cachedPeoplePhotos[dataKey][person.alias]}" alt="Photo picture of ${person.fullName}" />`;
-			
-			} else {
-				if(!_cachedPeoplePhotos[dataKey]) _cachedPeoplePhotos[dataKey] = {};
-				row += `<img class="photo placeholder" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
-				
-				photoResizerMasker({'image': person.imgData, 'mask': _settings.mask, 'size': _settings.size, 'name': person.alias},
-					function(data) {
-						_cachedPeoplePhotos[dataKey][person.alias] = data.result;
-						let personToUpdate = document.getElementById(`alias-${person.alias}`);
-						personToUpdate.innerHTML = `<img class="photo" src="${data.result}" alt="Photo picture of ${person.fullName}" />`;
-					}
-				);
-			}
-				
-
-		} else {
-				row += `<div class="initials" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
-		}
-
-	} else {
-		// No masking or resizing
-		if(person.imgData) {
-			row += `<img class="photo" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
-		} else {
-			row += `<div class="initials" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
-		}
-	}
-
-	row += `
+	let rowEnd = `
 			</div>
 			<div class="name"><b>${person.fullName}</b> (${person.alias})</div>
 		</div>
 	`;
 
-	return row;
+	let row = rowStart;
+
+	// Check the cache for mask+size iteration
+	let dataKey = _settings.mask + _settings.size;
+	if (_cachedPeoplePhotos[dataKey]) {
+		if(_cachedPeoplePhotos[dataKey][person.alias]) {
+			row += `<img class="photo" src="${_cachedPeoplePhotos[dataKey][person.alias]}" alt="Photo picture of ${person.fullName}" />`;
+			return row + rowEnd;
+		}
+	} else {
+		_cachedPeoplePhotos[dataKey] = {};
+	}
+	
+	// No image for this mask+size, create one
+	if(_settings.mask !== 'none') {
+		// Circle or Square masking
+
+		if(person.imgData) {
+			// Person has a picture
+			row += `<img class="photo placeholder" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
+			
+			photoResizerMasker({'image': person.imgData, 'mask': _settings.mask, 'size': _settings.size, 'name': person.alias}, makeImageCallback);
+
+		} else {
+			// No person picture, create an initials thing
+			row += `<div class="initials placeholder" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
+			makeInitialsPhoto(person.initials, person.bgColor, 48, makeImageCallback);
+		}
+
+	} else {
+		// No masking or resizing
+
+		if(person.imgData) {
+			// Person imgData is the cache
+			row += `<img class="photo" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
+		} else {
+			// No person picture, create an initials thing
+			row += `<div class="initials placeholder" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
+			makeInitialsPhoto(person.initials, person.bgColor, 48, makeImageCallback);
+		}
+	}
+
+	function makeImageCallback(data) {
+		_cachedPeoplePhotos[dataKey][person.alias] = data.result;
+		let personToUpdate = document.getElementById(`alias-${person.alias}`);
+		if(personToUpdate) {
+			personToUpdate.innerHTML = `<img class="photo" src="${data.result}" alt="Photo picture of ${person.fullName}" />`;
+		} else {
+			console.warn(`makeImageCallback FAILURE ${person.alias}`);
+			console.warn(_cachedPeoplePhotos);
+		}
+	}
+
+	console.log(`RETURNING\n${row + rowEnd}`);
+	return row + rowEnd;
+}
+
+
+function makeInitialsPhoto(initials, bgColor, size = 48, callback) {
+	let workingCanvas = document.createElement('canvas');
+	if(document.getElementById('testCanvas')) workingCanvas = document.getElementById('testCanvas');
+	let ctx = workingCanvas.getContext('2d');
+	let radius = size/2;
+	ctx.beginPath();
+	ctx.arc(radius, radius, radius, 0, Math.PI * 2, false);
+	ctx.fillStyle = bgColor;
+	ctx.fill();
+	ctx.clip();
+	ctx.font = 'bold 18px Segoe';
+	ctx.fillStyle = 'hsla(0, 0%, 100%, 90%)';
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+	ctx.fillText(initials, radius, radius);
+
+	let data = {
+		result: workingCanvas.toDataURL('image/png'),
+		canvas: workingCanvas
+	};
+
+	callback(data);
+
+	return data;
 }
 
 
