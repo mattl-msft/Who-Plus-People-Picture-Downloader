@@ -152,7 +152,12 @@ input[type="checkbox"]:hover {
 	color: white;
 	text-align: center;
 	align-self: center;
-	font-weight: bold;
+	font-weight: 600;
+	font-size: 16px;
+}
+
+.thumbnail .initials {
+	border-radius: 50%;
 }
 
 .thumbnail .placeholder {

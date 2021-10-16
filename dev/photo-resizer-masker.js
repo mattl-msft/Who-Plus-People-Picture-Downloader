@@ -92,5 +92,5 @@ export default function photoResizerMasker(options = {}, callback){
 
 function log(msg){
 	// a single place to turn off console logging
-	console.log(msg);
+	// console.log(msg);
 }

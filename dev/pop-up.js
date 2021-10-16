@@ -1,5 +1,6 @@
 import { getPeopleData } from './main-page.js';
 import photoResizerMasker from './photo-resizer-masker.js';
+export { updateOnePersonRow };
 
 let _settings = {
 	mask: 'circle',
@@ -79,6 +80,8 @@ function redrawPeoplePicturesList() {
 	listContent += '<span><i>End of people list</i></span><br><br>';
 	document.getElementById('listContent').innerHTML = listContent;
 	
+	// iterateOverPeopleList(person => updateOnePersonRow(person));
+
 	console.log(`redrawPeoplePicturesList - END`);
 }
 
@@ -104,6 +107,15 @@ function iterateOverPeopleList(fun) {
 	}
 }
 
+function updateOnePersonRow(person) {
+	let dataKey = _settings.mask + _settings.size;
+	let imgData = _cachedPeoplePhotos[dataKey][person.alias];
+	let personToUpdate = document.getElementById(`alias-${person.alias}`);
+	if(personToUpdate) {
+		personToUpdate.innerHTML = `<img class="photo" src="${imgData}" alt="Photo picture of ${person.fullName}" />`;
+	}
+}
+
 
 function makeOnePersonRow(person) {
 	console.log(`\n makeOnePersonRow - START`);
@@ -121,6 +133,9 @@ function makeOnePersonRow(person) {
 	`;
 
 	let row = rowStart;
+	if(person.alias === _peopleData.selected.alias && _settings.includeManagementChain) {
+		row = '<span class="separator"></span>' + row;
+	}
 
 	// Check the cache for mask+size iteration
 	let dataKey = _settings.mask + _settings.size;
@@ -133,33 +148,22 @@ function makeOnePersonRow(person) {
 		_cachedPeoplePhotos[dataKey] = {};
 	}
 	
-	// No image for this mask+size, create one
+	// If the person has no photo, make an Initials Circle
+	if(!person.imgData) {
+		row += `<div class="initials" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
+		makeInitialsPhoto(person.initials, person.bgColor, (_settings.mask === 'none'? 800 : _settings.size), makeImageCallback);
+		return row + rowEnd;
+	}
+
+	// The person has a photo, but not one cached, make one
 	if(_settings.mask !== 'none') {
 		// Circle or Square masking
-
-		if(person.imgData) {
-			// Person has a picture
-			row += `<img class="photo placeholder" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
-			
-			photoResizerMasker({'image': person.imgData, 'mask': _settings.mask, 'size': _settings.size, 'name': person.alias}, makeImageCallback);
-
-		} else {
-			// No person picture, create an initials thing
-			row += `<div class="initials placeholder" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
-			makeInitialsPhoto(person.initials, person.bgColor, 48, makeImageCallback);
-		}
+		row += `<img class="photo placeholder" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
+		photoResizerMasker({'image': person.imgData, 'mask': _settings.mask, 'size': _settings.size, 'name': person.alias}, makeImageCallback);
 
 	} else {
 		// No masking or resizing
-
-		if(person.imgData) {
-			// Person imgData is the cache
-			row += `<img class="photo" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
-		} else {
-			// No person picture, create an initials thing
-			row += `<div class="initials placeholder" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
-			makeInitialsPhoto(person.initials, person.bgColor, 48, makeImageCallback);
-		}
+		row += `<img class="photo" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
 	}
 
 	function makeImageCallback(data) {
@@ -167,9 +171,6 @@ function makeOnePersonRow(person) {
 		let personToUpdate = document.getElementById(`alias-${person.alias}`);
 		if(personToUpdate) {
 			personToUpdate.innerHTML = `<img class="photo" src="${data.result}" alt="Photo picture of ${person.fullName}" />`;
-		} else {
-			console.warn(`makeImageCallback FAILURE ${person.alias}`);
-			console.warn(_cachedPeoplePhotos);
 		}
 	}
 
@@ -181,25 +182,29 @@ function makeOnePersonRow(person) {
 function makeInitialsPhoto(initials, bgColor, size = 48, callback) {
 	let workingCanvas = document.createElement('canvas');
 	if(document.getElementById('testCanvas')) workingCanvas = document.getElementById('testCanvas');
+	workingCanvas.width = size;
+	workingCanvas.height = size;
+
 	let ctx = workingCanvas.getContext('2d');
 	let radius = size/2;
+	
 	ctx.beginPath();
 	ctx.arc(radius, radius, radius, 0, Math.PI * 2, false);
+	ctx.clip();
 	ctx.fillStyle = bgColor;
 	ctx.fill();
-	ctx.clip();
-	ctx.font = 'bold 18px Segoe';
+	ctx.font = `600 ${size/3}px Segoe`;
 	ctx.fillStyle = 'hsla(0, 0%, 100%, 90%)';
 	ctx.textAlign = 'center';
 	ctx.textBaseline = 'middle';
-	ctx.fillText(initials, radius, radius);
+	ctx.fillText(initials, radius, radius + (radius * 0.1));
 
 	let data = {
 		result: workingCanvas.toDataURL('image/png'),
 		canvas: workingCanvas
 	};
 
-	callback(data);
+	if(callback) callback(data);
 
 	return data;
 }

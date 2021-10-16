@@ -2,7 +2,7 @@ export { getPeopleData };
 
 // Looks through the whole page for all the people pictures and data
 function getPeopleData() {
-	console.log(`getPeoplePictures - START`);
+	// console.log(`getPeoplePictures - START`);
 	let result = {
 		'selected': {
 			'fullName': '',
@@ -21,7 +21,7 @@ function getPeopleData() {
 	result.selected.alias = selectedPerson.querySelectorAll('div[class^="emailAlias"]')[0].innerHTML;
 	result.selected.alias = result.selected.alias.substr(1,result.selected.alias.length-2);
 	result.selected.imgData = selectedPerson.querySelector('.ms-Image-image').getAttribute('src');
-	console.log(result.selected);
+	// console.log(result.selected);
 
 
 	/*
@@ -33,7 +33,7 @@ function getPeopleData() {
 	if(aboveSelectedPerson.length){
 		aboveSelectedPerson = aboveSelectedPerson[0];
 		aboveSelectedPerson = aboveSelectedPerson.querySelectorAll('a[href*="/Org/"]');
-		console.log(aboveSelectedPerson);
+		// console.log(aboveSelectedPerson);
 		
 		aboveSelectedPerson.forEach(elem => {
 			result.above.push(getDataFromPeopleNode(elem));
@@ -50,7 +50,7 @@ function getPeopleData() {
 	if(belowSelectedPerson.length){
 		belowSelectedPerson = belowSelectedPerson[0];
 		belowSelectedPerson = belowSelectedPerson.querySelectorAll('a[href*="/Org/"]');
-		console.log(belowSelectedPerson);
+		// console.log(belowSelectedPerson);
 		
 		belowSelectedPerson.forEach(elem => {
 			result.below.push(getDataFromPeopleNode(elem));
@@ -60,7 +60,7 @@ function getPeopleData() {
 
 	// Given a single person's card, get name, alias, and picture data from it
 	function getDataFromPeopleNode(node){
-		console.log(node);
+		// console.log(node);
 		let subNode;
 		let personData = {
 			'alias': '',
@@ -71,6 +71,17 @@ function getPeopleData() {
 		subNode = node.querySelector('.ms-Persona-primaryText');
 		personData.fullName = subNode.firstElementChild.textContent;
 
+		// Name bug where the name is duplicated
+		if(personData.fullName % 2 === 0){
+			let half = personData.fullName.length / 2;
+			let nameH1 = personData.fullName.substr(0, half);
+			let nameH2 = personData.fullName.substr(half, half);
+			if(nameH1 === nameH2) {
+				console.warn(`Duplicate name bug found! ${personData.fullName}`);
+				personData.fullName = nameH1;
+			}
+		}
+		
 		// get Alias
 		personData.alias = node.getAttribute('href').split('/Org/')[1].toLowerCase();;
 
@@ -92,6 +103,6 @@ function getPeopleData() {
 		return personData
 	}
 
-	console.log(`getPeoplePictures - END`);
+	// console.log(`getPeoplePictures - END`);
 	chrome.runtime.sendMessage(JSON.stringify(result));
 }
