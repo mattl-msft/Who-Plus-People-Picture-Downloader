@@ -4,7 +4,7 @@ export { updateOnePersonRow };
 
 let _settings = {
 	mask: 'circle',
-	size: 200,
+	size: 400,
 	includeManagementChain: false
 };
 
@@ -14,7 +14,9 @@ let _peopleData = {
 	below: []
 };
 
-let _cachedPeoplePhotos = {}
+let _cachedPeoplePhotos = {};
+
+let sizeInputMessage = 'For shape mask = "none", photos will be downloaded at their native size.\nThis field will have no effect.';
 
 
 /*
@@ -38,31 +40,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 chrome.runtime.onMessage.addListener(function(message) {
-	console.log(`POPUP.listener - got message`);
-	console.log(message);
+	// console.log(`POPUP.listener - got message`);
+	// console.log(message);
 	_peopleData = JSON.parse(message);
-	console.log(_peopleData);
-
-	redraw();
-});
-
-
-function redraw() {
-	console.log(`redraw - START`);
+	// console.log(_peopleData);
 
 	redrawInfo();
 	redrawControls();
 	redrawPeoplePicturesList();
-
-	console.log(`redraw - END`);
-}
+});
 
 
 /*
 		Picture List
 */
 function redrawPeoplePicturesList() {
-	console.log(`redrawPeoplePicturesList - START`);
+	// console.log(`redrawPeoplePicturesList - START`);
 	
 	let total = 1 + _peopleData.below.length;
 	if(_settings.includeManagementChain) total += _peopleData.above.length;
@@ -82,7 +75,7 @@ function redrawPeoplePicturesList() {
 	
 	// iterateOverPeopleList(person => updateOnePersonRow(person));
 
-	console.log(`redrawPeoplePicturesList - END`);
+	// console.log(`redrawPeoplePicturesList - END`);
 }
 
 
@@ -118,8 +111,8 @@ function updateOnePersonRow(person) {
 
 
 function makeOnePersonRow(person) {
-	console.log(`\n makeOnePersonRow - START`);
-	console.log(`\t ${person.alias} - ${person.fullName}`);
+	// console.log(`\n makeOnePersonRow - START`);
+	// console.log(`\t ${person.alias} - ${person.fullName}`);
 
 	let rowStart = `
 		<div class="rowWrapper">
@@ -139,6 +132,8 @@ function makeOnePersonRow(person) {
 
 	// Check the cache for mask+size iteration
 	let dataKey = _settings.mask + _settings.size;
+	if(_settings.mask === 'none') dataKey = 'none';
+
 	if (_cachedPeoplePhotos[dataKey]) {
 		if(_cachedPeoplePhotos[dataKey][person.alias]) {
 			row += `<img class="photo" src="${_cachedPeoplePhotos[dataKey][person.alias]}" alt="Photo picture of ${person.fullName}" />`;
@@ -164,6 +159,7 @@ function makeOnePersonRow(person) {
 	} else {
 		// No masking or resizing
 		row += `<img class="photo" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
+		_cachedPeoplePhotos['none'][person.alias] = person.imgData;
 	}
 
 	function makeImageCallback(data) {
@@ -174,7 +170,7 @@ function makeOnePersonRow(person) {
 		}
 	}
 
-	console.log(`RETURNING\n${row + rowEnd}`);
+	// console.log(`RETURNING\n${row + rowEnd}`);
 	return row + rowEnd;
 }
 
@@ -193,11 +189,11 @@ function makeInitialsPhoto(initials, bgColor, size = 48, callback) {
 	ctx.clip();
 	ctx.fillStyle = bgColor;
 	ctx.fill();
-	ctx.font = `600 ${size/3}px Segoe`;
+	ctx.font = `600 ${size/3}px "Segoe UI", "Segoe", "Arial", "sans-serif"`;
 	ctx.fillStyle = 'hsla(0, 0%, 100%, 90%)';
 	ctx.textAlign = 'center';
 	ctx.textBaseline = 'middle';
-	ctx.fillText(initials, radius, radius + (radius * 0.1));
+	ctx.fillText(initials, radius, radius + (radius * 0.09));
 
 	let data = {
 		result: workingCanvas.toDataURL('image/png'),
@@ -235,7 +231,7 @@ function redrawControls() {
 	} else {
 		controlsContent += `
 			<label>Size (px)</label>
-			<input type="text" id="sizeInput" disabled value=""/>
+			<input type="text" id="sizeInput" disabled title="${sizeInputMessage}" value=""/>
 		`;
 	}
 
@@ -257,7 +253,7 @@ function updateSettings() {
 	let sizeSetting = parseInt(document.getElementById('sizeInput').value);
 	let includeManagementChainSetting = document.getElementById('includeManagementChainInput').checked;
 
-	console.log(`updateSettings - setting to ${maskSetting} ${sizeSetting} ${includeManagementChainSetting}`);
+	// console.log(`updateSettings - setting to ${maskSetting} ${sizeSetting} ${includeManagementChainSetting}`);
 	_settings = {
 		mask: maskSetting,
 		size: sizeSetting,
@@ -267,9 +263,11 @@ function updateSettings() {
 	let sizeElement = document.getElementById('sizeInput');
 	if(_settings.mask === 'none') {
 		sizeElement.setAttribute('disabled', 'disabled');
+		sizeElement.setAttribute('title', sizeInputMessage);
 		// sizeElement.value = '';
 	} else {
 		sizeElement.removeAttribute('disabled');
+		sizeElement.removeAttribute('title');
 		// sizeElement.value = _settings.size;
 	}
 
@@ -321,14 +319,9 @@ function downloadAllPeoplePictures(){
 	downloadList.push(_peopleData.selected);
 	downloadList = downloadList.concat(_peopleData.below);
 
-	console.log(`downloadAllPeoplePictures - doing ${downloadList.length}`);
-	// downloadList.forEach((elem) => {
-		// 	if(_settings.mask !== 'none') {
-			// 		let dataKey = _settings.mask + _settings.size;
-			// 		downloadFile(elem.alias, _cachedPeoplePhotos[dataKey][elem.alias]);
-			// 	}
-			// });
-			
+	// console.log(`downloadAllPeoplePictures - doing ${downloadList.length}`);
+	// console.log(_cachedPeoplePhotos);
+
 	let index = 0;
 	let element;
 	function downloadOnePersonPicture() {
@@ -338,6 +331,9 @@ function downloadAllPeoplePictures(){
 			if(_settings.mask !== 'none') {
 				let dataKey = _settings.mask + _settings.size;
 				downloadFile(element.alias, _cachedPeoplePhotos[dataKey][element.alias]);
+			} else {
+				// for Initial Circles, just grab the first cached size (could be strange?)
+				downloadFile(element.alias, _cachedPeoplePhotos['none'][element.alias]);
 			}
 
 			index++;
@@ -349,7 +345,7 @@ function downloadAllPeoplePictures(){
 }
 
 function downloadFile(alias = 'picture', imgData = ''){
-	console.log(`\t\t downloading ${alias}`);
+	// console.log(`\t\t downloading ${alias}`);
 	var link = document.createElement('a');
 	link.download = `${alias}.png`
 	link.href = imgData;

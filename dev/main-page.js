@@ -97,8 +97,8 @@ function getPeopleData() {
 			personData.bgColor = window.getComputedStyle(subNode).backgroundColor;
 		}
 
-	
-		console.log(`${personData.fullName} | ${personData.alias} | ${personData.imgData? personData.imgData : `${personData.initials} | ${personData.bgColor}`}`);
+		// Show what data is collected
+		// console.log(`${personData.fullName} | ${personData.alias} | ${personData.imgData? personData.imgData : `${personData.initials} | ${personData.bgColor}`}`);
 		
 		return personData
 	}
