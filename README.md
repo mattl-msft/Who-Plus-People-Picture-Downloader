@@ -1,4 +1,4 @@
-# Who-Plus-People-Picture-Downloader
+# ![icon32](https://user-images.githubusercontent.com/26494449/137797326-ea07649e-fd0e-48e1-b607-cb96987d387f.png) Who Plus People Picture Downloader
 Browser extension that lets you download with one click all the people pictures you can see on a Who+ page.
 
 Part of Microsoft's Hackathon 2021
