@@ -1,8 +1,8 @@
 {
 	"name": "Who+ People Picture Downloader",
 	"short_name": "Who+ People Picture Downloader",
-	"version": "1.0",
-	"version_name": "Version 1.0",
+	"version": "1.1",
+	"version_name": "Version 1.1",
 	"description": "An internal-Microsoft browser extension that lets you download with one click all the people pictures you can see on a Who+ page.",
 	"author": "Matt LaGrandeur",
 	"manifest_version": 2,

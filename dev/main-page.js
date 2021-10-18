@@ -72,12 +72,14 @@ function getPeopleData() {
 		personData.fullName = subNode.firstElementChild.textContent;
 
 		// Name bug where the name is duplicated
-		if(personData.fullName % 2 === 0){
+		// console.log(`Name bug detection: %2 for ${personData.fullName.length} is ${personData.fullName % 2}`);
+		if(personData.fullName.length % 2 === 0){
 			let half = personData.fullName.length / 2;
 			let nameH1 = personData.fullName.substr(0, half);
 			let nameH2 = personData.fullName.substr(half, half);
+			// console.log(`Name bug detection... '${nameH1}' '${nameH2}'`);
 			if(nameH1 === nameH2) {
-				console.warn(`Duplicate name bug found! ${personData.fullName}`);
+				// console.warn(`Duplicate name bug found! ${personData.fullName}`);
 				personData.fullName = nameH1;
 			}
 		}
