@@ -12,7 +12,7 @@ This extension has been submitted to the [Chrome Web Store](https://chrome.googl
 ## Installing extensions locally
 You can add extensions to Edge or Chrome using the files in this repository:
 
-1. Download the [version 1.0 .zip file](https://github.com/mattl-msft/Who-Plus-People-Picture-Downloader/raw/main/dist/Who-Plus-People-Picture-Downloader-v1.0.zip) (found in the [dist](https://github.com/mattl-msft/Who-Plus-People-Picture-Downloader/tree/main/dist) folder).
+1. Download the [version 1.1 .zip file](https://github.com/mattl-msft/Who-Plus-People-Picture-Downloader/raw/main/dist/Who-Plus-People-Picture-Downloader-v1.1.zip) (found in the [dist](https://github.com/mattl-msft/Who-Plus-People-Picture-Downloader/tree/main/dist) folder).
 2. Create a new folder on your computer, and extract the files from the .zip to your new folder (remember it's name and location).
 3. Go to your browser's extension manager
    * Edge: go to '...' menu, then Extensions
