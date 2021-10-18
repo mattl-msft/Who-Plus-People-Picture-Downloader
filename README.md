@@ -3,6 +3,8 @@ Browser extension that lets you download with one click all the people pictures 
 
 Part of Microsoft's Hackathon 2021
 
+![marketplace-screenshot](https://user-images.githubusercontent.com/26494449/137796446-1dd75a93-e4f5-44b2-8b98-5ae04debdb1f.png)
+
 ## Installing from the Chrome Web Store
 This extension has been submitted to the [Chrome Web Store](https://chrome.google.com/webstore/category/extensions),
  and is undergoing the approval process.  Stay tuned for the direct link...
