@@ -29,7 +29,7 @@ export default function photoResizerMasker(options = {}, callback){
 	function processImage() {
 		// const resultImage = new Image();
 		let minDimension = Math.min(srcImage.width, srcImage.height);
-		if(srcImage.width !== srcImage.height) console.warn(`\t original dimensions - w:${srcImage.width} h:${srcImage.height}`);
+		// if(srcImage.width !== srcImage.height) console.warn(`\t original dimensions - w:${srcImage.width} h:${srcImage.height}`);
 		
 		/*   Scaling   */
 		if(options.size){
