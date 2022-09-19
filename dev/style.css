@@ -1,10 +1,12 @@
 :root {
 	--blue: hsl(210, 100%, 40%);
+	--light-blue: hsl(210, 100%, 90%);
 	--purple: hsl(298, 83%, 32%);
+	--light-purple: hsl(298, 83%, 80%);
 	--orange: hsl(31, 100%, 50%);
 	--accent: var(--purple);
 	
-	--fade: 200ms;
+	--fade: 400ms;
 
 	--pad: 20px;
 	--small-pad: 10px;
@@ -224,7 +226,9 @@ input[type="checkbox"]:hover {
 button {
 	padding: 0;
 	color: var(--blue);
-	border: 0;
+	border-style:solid;
+	border-width: 2px;
+	border-color: rgba(255, 255, 255, 0.92);
 	border-radius: 4px;
 	background-image: linear-gradient(315deg,
 		var(--purple),
@@ -243,9 +247,10 @@ button {
 button span {
 	text-align: center;
 	display: block;
+	border-radius: 1px;
 	height: 36px;
 	padding: 10px 10px 6px 10px;
-	background-color: white;
+	background-color: rgba(255, 255, 255, 0.97);
 	transition: all var(--fade) ease-in-out;
 }
 
@@ -260,6 +265,7 @@ button:hover,
 button:focus {
 	color: white;
 	cursor: pointer;
+	border-color: transparent;
 	box-shadow: -2px 2px 4px 0 rgba(0,0,0,.16);
 	transition: all var(--fade) ease-in-out;
 }

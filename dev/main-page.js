@@ -106,5 +106,5 @@ function getPeopleData() {
 	}
 
 	// console.log(`getPeoplePictures - END`);
-	chrome.runtime.sendMessage(JSON.stringify(result));
+	return result;
 }

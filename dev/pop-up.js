@@ -1,6 +1,5 @@
 import { getPeopleData } from './main-page.js';
-import photoResizerMasker from './photo-resizer-masker.js';
-export { updateOnePersonRow };
+import { photoResizerMasker } from './photo-resizer-masker.js';
 
 let _settings = {
 	mask: 'circle',
@@ -8,48 +7,38 @@ let _settings = {
 	includeManagementChain: false
 };
 
-let _peopleData = {
-	selected: {},
-	above: [],
-	below: []
-};
-
 let _cachedPeoplePhotos = {};
-
-let sizeInputMessage = 'For shape mask = "none", photos will be downloaded at their native size.\nThis field will have no effect.';
-
+let _peopleData = {};
 
 /*
 		Starting the extension
 */
 // What to do every time the popup is opened
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async () => {
 	document.getElementById('infoContent').innerHTML = '<span><i>Getting people pictures...</i></span>';
 	
-	// So, this tabs.executeScript takes a code string :-\
-	// 'getPeopleData' is defined below, then use fn.toString and call it in an IIFE
-	chrome.tabs.executeScript({
-		code: `
-			(function () {
-				${getPeopleData.toString()}
-				getPeopleData();
-			})();
-			`
+	const tab = await getCurrentTab();
+	// console.log(tab);
+
+	let results = await chrome.scripting.executeScript({
+		target: {tabId: tab.id},
+		func: getPeopleData,
 	});
-});
 
-
-chrome.runtime.onMessage.addListener(function(message) {
-	// console.log(`POPUP.listener - got message`);
-	// console.log(message);
-	_peopleData = JSON.parse(message);
+	_peopleData = results[0].result;
 	// console.log(_peopleData);
 
-	redrawInfo();
+	redrawInfo(_peopleData);
 	redrawControls();
-	redrawPeoplePicturesList();
+	redrawPeoplePicturesList(_peopleData);
 });
 
+async function getCurrentTab() {
+	let queryOptions = { active: true, lastFocusedWindow: true };
+	// `tab` will either be a `tabs.Tab` instance or `undefined`.
+	let [tab] = await chrome.tabs.query(queryOptions);
+	return tab;
+}
 
 /*
 		Picture List
@@ -68,7 +57,7 @@ function redrawPeoplePicturesList() {
 	
 	// listContent += `<span>${JSON.stringify(_settings)}</span>`;
 
-	iterateOverPeopleList(person => listContent += makeOnePersonRow(person));
+	iterateOverPeopleList(person => listContent += makeOnePersonRow(person), _peopleData);
 	
 	listContent += '<span><i>End of people list</i></span><br><br>';
 	document.getElementById('listContent').innerHTML = listContent;
@@ -77,7 +66,6 @@ function redrawPeoplePicturesList() {
 
 	// console.log(`redrawPeoplePicturesList - END`);
 }
-
 
 function iterateOverPeopleList(fun) {
 	// ABOVE
@@ -108,7 +96,6 @@ function updateOnePersonRow(person) {
 		personToUpdate.innerHTML = `<img class="photo" src="${imgData}" alt="Photo picture of ${person.fullName}" />`;
 	}
 }
-
 
 function makeOnePersonRow(person) {
 	// console.log(`\n makeOnePersonRow - START`);
@@ -174,7 +161,6 @@ function makeOnePersonRow(person) {
 	return row + rowEnd;
 }
 
-
 function makeInitialsPhoto(initials, bgColor, size = 48, callback) {
 	let workingCanvas = document.createElement('canvas');
 	if(document.getElementById('testCanvas')) workingCanvas = document.getElementById('testCanvas');
@@ -209,6 +195,9 @@ function makeInitialsPhoto(initials, bgColor, size = 48, callback) {
 /*
 		Controls & Header
 */
+
+let _sizeInputMessage = 'For shape mask = "none", photos will be downloaded at their native size.\nThis field will have no effect.';
+
 function redrawControls() {
 	let controlsContent = `<h2>Picture options</h2>`;
 
@@ -231,7 +220,7 @@ function redrawControls() {
 	} else {
 		controlsContent += `
 			<label>Size (px)</label>
-			<input type="text" id="sizeInput" disabled title="${sizeInputMessage}" value=""/>
+			<input type="text" id="sizeInput" disabled title="${_sizeInputMessage}" value=""/>
 		`;
 	}
 
@@ -246,7 +235,6 @@ function redrawControls() {
 	document.getElementById('sizeInput').onchange = updateSettings;
 	document.getElementById('includeManagementChainInput').onchange = updateSettings;
 }
-
 
 function updateSettings() {
 	let maskSetting = document.getElementById('maskInput').value;
@@ -263,7 +251,7 @@ function updateSettings() {
 	let sizeElement = document.getElementById('sizeInput');
 	if(_settings.mask === 'none') {
 		sizeElement.setAttribute('disabled', 'disabled');
-		sizeElement.setAttribute('title', sizeInputMessage);
+		sizeElement.setAttribute('title', _sizeInputMessage);
 		// sizeElement.value = '';
 	} else {
 		sizeElement.removeAttribute('disabled');
@@ -273,7 +261,6 @@ function updateSettings() {
 
 	redrawPeoplePicturesList();
 }
-
 
 function redrawInfo() {
 	
@@ -306,7 +293,7 @@ function redrawInfo() {
 
 	document.getElementById('openInfo').onclick = () => document.getElementById('infoDialog').style.display = 'block';
 	document.getElementById('closeInfo').onclick = () => document.getElementById('infoDialog').style.display = 'none';
-	document.getElementById('downloadButton').onclick = downloadAllPeoplePictures;
+	document.getElementById('downloadButton').onclick = () => { downloadAllPeoplePictures(_peopleData); }
 }
 
 

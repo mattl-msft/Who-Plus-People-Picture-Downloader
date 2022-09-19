@@ -7,7 +7,7 @@
  * @param {string} options.name - optional, name for this image
  * @returns {string} - Base64 PNG src data
  */
-export default function photoResizerMasker(options = {}, callback){
+export function photoResizerMasker(options = {}, callback){
 	options.name = options.name || '';
 	log(`\n\n===============\n${options.name}\nphotoResizerMasker - start`);
 	log(options);
