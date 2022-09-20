@@ -5,15 +5,13 @@
 	--light-purple: hsl(298, 83%, 80%);
 	--orange: hsl(31, 100%, 50%);
 	--accent: var(--purple);
-
 	--gray-40: hsl(0, 0%, 40%);
 	--gray-60: hsl(0, 0%, 60%);
 	--gray-80: hsl(0, 0%, 80%);
-	--fade: 400ms;
 
+	--fade: 400ms;
 	--pad: 20px;
 	--small-pad: 10px;
-
 	--row-size: 48px;
 }
 

@@ -216,7 +216,6 @@ function makeInitialsPhoto(initials, bgColor, callback, size = 48) {
 	};
 
 	if(callback) callback(data);
-
 	return data;
 }
 

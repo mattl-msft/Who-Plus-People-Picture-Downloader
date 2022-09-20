@@ -107,7 +107,7 @@ function getPeopleData() {
 		// Show what data is collected
 		// console.log(`${personData.fullName} | ${personData.alias} | ${personData.imgData? personData.imgData : `${personData.initials} | ${personData.bgColor}`}`);
 		
-		return personData
+		return personData;
 	}
 
 	// console.log(`getPeoplePictures - END`);

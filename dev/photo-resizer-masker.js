@@ -50,7 +50,7 @@ export function photoResizerMasker(options = {}, callback){
 					x = (-1*scale*(srcImage.width/4));
 				} else if (srcImage.width < srcImage.height) {
 					log(`\t width < height, updating to x:000 y:${(-1*scale*(srcImage.height/4))}`);
-					y = (-1*scale*(srcImage.height/4))
+					y = (-1*scale*(srcImage.height/4));
 				}
 			}
 
