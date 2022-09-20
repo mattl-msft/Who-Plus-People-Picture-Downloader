@@ -7,11 +7,11 @@ chrome.runtime.onInstalled.addListener(function() {
 				// That fires when a page's URL contains:
 				conditions: [
 					new chrome.declarativeContent.PageStateMatcher({
-						pageUrl: { urlContains: 'whoplus.microsoft.com' },
+						pageUrl: { urlContains: 'whoplus.microsoft.com/Org' },
 					})
 				],
 				// And shows the extension's page action.
-				actions: [ new chrome.declarativeContent.ShowPageAction() ]
+				actions: [ new chrome.declarativeContent.ShowAction() ]
 			}
 		]);
 	});

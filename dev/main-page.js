@@ -16,7 +16,12 @@ function getPeopleData() {
 	/*
 		Get data from the currently selected person's card
 	*/
-	let selectedPerson = document.querySelectorAll('div[aria-label^="Information about"]')[0];
+	let selectedPerson = document.querySelectorAll('div[aria-label^="Information about"]');
+	if(selectedPerson[0]) selectedPerson = selectedPerson[0];
+	else {
+		console.warn('Who Plus People Picture Downloader - could not find any people pictures.');
+		return false;
+	}
 	result.selected.fullName = selectedPerson.getAttribute('aria-label').split('Information about ')[1];
 	result.selected.alias = selectedPerson.querySelectorAll('div[class^="emailAlias"]')[0].innerHTML;
 	result.selected.alias = result.selected.alias.substr(1,result.selected.alias.length-2);

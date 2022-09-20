@@ -90,7 +90,7 @@ select:hover {
 
 #mainContent {
 	padding: var(--pad);
-	height: 100%;
+	/* height: 100%; */
 }
 
 

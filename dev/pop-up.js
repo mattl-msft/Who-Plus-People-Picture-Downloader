@@ -15,24 +15,53 @@ let _peopleData = {};
 */
 // What to do every time the popup is opened
 document.addEventListener('DOMContentLoaded', async () => {
-	document.getElementById('infoContent').innerHTML = '<span><i>Getting people pictures...</i></span>';
+	let infoContent = document.getElementById('infoContent');
+	infoContent.innerHTML = '<span><i>Getting people pictures...</i></span>';
 	
 	const tab = await getCurrentTab();
 	// console.log(tab);
+	if(tab.url.startsWith('edge://') || tab.url.startsWith('chrome://')) {
+		showURLErrorMessage();
+		return;
+	}
 
 	let results = await chrome.scripting.executeScript({
 		target: {tabId: tab.id},
 		func: getPeopleData,
 	});
+	// console.log(`executeScript results`);
+	// console.log(results);
 
-	_peopleData = results[0].result;
-	// console.log(_peopleData);
+	if(results[0]?.result) {
+		_peopleData = results[0].result;
+		// console.log(_peopleData);
 
-	redrawInfo(_peopleData);
-	redrawControls();
-	redrawPeoplePicturesList(_peopleData);
+		if(_peopleData.selected) {
+			redrawInfo(_peopleData);
+			redrawControls();
+			redrawPeoplePicturesList(_peopleData);
+
+		} else {
+			infoContent.innerHTML = `
+				<i style="grid-column: span 3; color: darkred;">
+					No people pictures found.
+				</i>
+			`;
+		}
+	} else {
+		showURLErrorMessage();
+	}
 });
 
+function showURLErrorMessage() {
+	document.getElementById('infoContent').innerHTML = `
+	<i style="grid-column: span 3; color: darkred;">
+		This extension only works on whoplus.microsoft.com/org
+		<br>
+		Contact <a href="mailto:matt@mattlag.com">matt@mattlag.com</a> for help.
+	</i>
+`;
+}
 async function getCurrentTab() {
 	let queryOptions = { active: true, lastFocusedWindow: true };
 	// `tab` will either be a `tabs.Tab` instance or `undefined`.
@@ -59,7 +88,7 @@ function redrawPeoplePicturesList() {
 
 	iterateOverPeopleList(person => listContent += makeOnePersonRow(person), _peopleData);
 	
-	listContent += '<span><i>End of people list</i></span><br><br>';
+	listContent += '<span><i>End of people list</i></span>';
 	document.getElementById('listContent').innerHTML = listContent;
 	
 	// iterateOverPeopleList(person => updateOnePersonRow(person));
