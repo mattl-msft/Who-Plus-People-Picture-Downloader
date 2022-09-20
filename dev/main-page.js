@@ -75,8 +75,8 @@ function getPeopleData() {
 		// console.log(`Name bug detection: %2 for ${personData.fullName.length} is ${personData.fullName % 2}`);
 		if(personData.fullName.length % 2 === 0){
 			let half = personData.fullName.length / 2;
-			let nameH1 = personData.fullName.substr(0, half);
-			let nameH2 = personData.fullName.substr(half, half);
+			let nameH1 = personData.fullName.substring(0, half);
+			let nameH2 = personData.fullName.substring(half);
 			// console.log(`Name bug detection... '${nameH1}' '${nameH2}'`);
 			if(nameH1 === nameH2) {
 				// console.warn(`Duplicate name bug found! ${personData.fullName}`);
@@ -85,7 +85,7 @@ function getPeopleData() {
 		}
 		
 		// get Alias
-		personData.alias = node.getAttribute('href').split('/Org/')[1].toLowerCase();;
+		personData.alias = node.getAttribute('href').split('/Org/')[1].toLowerCase();
 
 		// get Photo or Initials
 		subNode = node.querySelector('.ms-Image-image');

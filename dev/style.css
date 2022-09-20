@@ -5,7 +5,10 @@
 	--light-purple: hsl(298, 83%, 80%);
 	--orange: hsl(31, 100%, 50%);
 	--accent: var(--purple);
-	
+
+	--gray-40: hsl(0, 0%, 40%);
+	--gray-60: hsl(0, 0%, 60%);
+	--gray-80: hsl(0, 0%, 80%);
 	--fade: 400ms;
 
 	--pad: 20px;
@@ -34,11 +37,22 @@ h2 {
 }
 
 i {
-	color: hsl(0, 0%, 30%);
+	color: var(--gray-60);
 }
 
 span {
 	grid-column: span 3;
+}
+
+input,
+select {
+	padding-right: 5px;
+	border: 1px solid var(--gray-80);
+	border-radius: 2px;
+}
+
+input[type=checkbox] {
+	opacity: 60%;
 }
 
 input:focus,
@@ -198,11 +212,12 @@ input[type="checkbox"]:hover {
 		Info Dialog
 */
 #openInfo {
-	width: 36px;
+	width: 40px;
 }
 
 #closeInfo {
 	width: max-content;
+	grid-column: 2;
 }
 
 #infoDialog {
@@ -216,9 +231,12 @@ input[type="checkbox"]:hover {
 }
 
 #infoDialog p {
-	margin-bottom: var(--pad);
+	margin-top: 10px;
 }
 
+#infoDialog h2 {
+	margin-top: 10px;
+}
 
 /* 
 		Disco Button
@@ -240,7 +258,7 @@ button {
 		var(--purple)
 	);
 	background-size: 1400% 1400%;
-	animation: disco 4s linear infinite;
+	animation: disco 8s linear infinite;
 	width: min-content;
 }
 

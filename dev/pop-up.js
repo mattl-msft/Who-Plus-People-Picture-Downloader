@@ -133,7 +133,7 @@ function makeOnePersonRow(person) {
 	// If the person has no photo, make an Initials Circle
 	if(!person.imgData) {
 		row += `<div class="initials" style="background-color: ${person.bgColor};" alt="Initials of ${person.fullName}">${person.initials}</div>`;
-		makeInitialsPhoto(person.initials, person.bgColor, (_settings.mask === 'none'? 800 : _settings.size), makeImageCallback);
+		makeInitialsPhoto(person.initials, person.bgColor, makeImageCallback, (_settings.mask === 'none'? 800 : _settings.size));
 		return row + rowEnd;
 	}
 
@@ -146,7 +146,7 @@ function makeOnePersonRow(person) {
 	} else {
 		// No masking or resizing
 		row += `<img class="photo" src="${person.imgData}" alt="Photo picture of ${person.fullName}" />`;
-		_cachedPeoplePhotos['none'][person.alias] = person.imgData;
+		_cachedPeoplePhotos.none[person.alias] = person.imgData;
 	}
 
 	function makeImageCallback(data) {
@@ -161,7 +161,7 @@ function makeOnePersonRow(person) {
 	return row + rowEnd;
 }
 
-function makeInitialsPhoto(initials, bgColor, size = 48, callback) {
+function makeInitialsPhoto(initials, bgColor, callback, size = 48) {
 	let workingCanvas = document.createElement('canvas');
 	if(document.getElementById('testCanvas')) workingCanvas = document.getElementById('testCanvas');
 	workingCanvas.width = size;
@@ -200,8 +200,6 @@ let _sizeInputMessage = 'For shape mask = "none", photos will be downloaded at t
 
 function redrawControls() {
 	let controlsContent = `<h2>Picture options</h2>`;
-
-	// controlsContent += '<canvas id="testCanvas"></canvas><br>';
 
 	controlsContent += `
 		<label for="maskInput">Shape mask</label>
@@ -268,8 +266,8 @@ function redrawInfo() {
 		<div class="headerRow">
 			<button id="downloadButton">
 				<span>
-					<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="14px"
-						height="14px" viewBox="0 0 14 14" style="enable-background:new 0 0 14 14;" xml:space="preserve">
+					<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve"
+						x="0px" y="0px" width="14px" height="14px" viewBox="0 0 14 14" style="enable-background:new 0 0 14 14;" >
 						<rect x="1" y="12" width="12" height="2"/>
 						<polygon points="11.708 4.869 8 7.856 8 0 6 0 6 7.856 2.292 4.869 1 6.418 7 11.295 13 6.418 11.708 4.869"/>
 					</svg>&nbsp;Download&nbsp;people&nbsp;pictures&nbsp;
@@ -277,12 +275,10 @@ function redrawInfo() {
 			</button>
 			<button id="openInfo">
 				<span>
-					<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-						x="0px" y="0px" width="14px" height="14px" 
-						viewBox="0 0 14 14" style="enable-background:new 0 0 14 14;" xml:space="preserve">
+					<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve"
+						x="0px" y="0px" width="14px" height="14px" viewBox="0 0 14 14" style="enable-background:new 0 0 14 14;" >
 					<path d="
-						M7,0C3.1,0,0,3.1,0,7c0,3.9,3.1,7,7,7s7-3.1,7-7C14,3.1,10.9,0,7,0z
-						M8,12H6V6h2V12z
+						M7,0C3.1,0,0,3.1,0,7c0,3.9,3.1,7,7,7s7-3.1,7-7C14,3.1,10.9,0,7,0z	M8,12H6V6h2V12z
 						M7,4.5c-0.8,0-1.3-0.6-1.3-1.3 S6.4,2,7,2c0.6,0,1.3,0.6,1.3,1.3S7.8,4.5,7,4.5z
 					"/>
 					</svg>
@@ -293,7 +289,7 @@ function redrawInfo() {
 
 	document.getElementById('openInfo').onclick = () => document.getElementById('infoDialog').style.display = 'block';
 	document.getElementById('closeInfo').onclick = () => document.getElementById('infoDialog').style.display = 'none';
-	document.getElementById('downloadButton').onclick = () => { downloadAllPeoplePictures(_peopleData); }
+	document.getElementById('downloadButton').onclick = () => { downloadAllPeoplePictures(_peopleData); };
 }
 
 
@@ -320,7 +316,7 @@ function downloadAllPeoplePictures(){
 				downloadFile(element.alias, _cachedPeoplePhotos[dataKey][element.alias]);
 			} else {
 				// for Initial Circles, just grab the first cached size (could be strange?)
-				downloadFile(element.alias, _cachedPeoplePhotos['none'][element.alias]);
+				downloadFile(element.alias, _cachedPeoplePhotos.none[element.alias]);
 			}
 
 			index++;
@@ -334,7 +330,7 @@ function downloadAllPeoplePictures(){
 function downloadFile(alias = 'picture', imgData = ''){
 	// console.log(`\t\t downloading ${alias}`);
 	var link = document.createElement('a');
-	link.download = `${alias}.png`
+	link.download = `${alias}.png`;
 	link.href = imgData;
 	link.click();
 }
